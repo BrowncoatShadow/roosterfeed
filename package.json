@@ -4,6 +4,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
+  "engines": {
+    "node": "8.x"
+  },
   "dependencies": {
     "axios": "^0.17.1",
     "server": "^1.0.4"
