@@ -15,7 +15,7 @@ const rt = axios.create({
 
 server([
   get('/', ctx => 404),
-  get('/:channel', async ctx => {
+  get('/:channel.json', async ctx => {
     if (ctx.params.channel < 0 || ctx.params.channel > channels.length) return 404
     var feed = {
       version: 'https://jsonfeed.org/version/1',
