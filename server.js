@@ -1,12 +1,12 @@
-const server = require('server');
-const { get } = server.router;
+const server = require('server')
+const { get } = server.router
 const axios = require('axios')
 
 const channels = [
-  "Rooster Teeth",
-  "Achievement Hunter",
-  "The Know",
-  "FunHaus"
+  'Rooster Teeth',
+  'Achievement Hunter',
+  'The Know',
+  'FunHaus'
 ]
 
 const rt = axios.create({
