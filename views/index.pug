@@ -5,10 +5,10 @@ each feed in feeds
     rel='alternate'
     title=feed.title
     type='application/json'
-    href='/' + feed.name + '.json' + query
+    href=baseUrl + '/' + feed.name + '.json' + query
   )
 h1 Rooster Teeth JSON Feeds
 ul
   each feed in feeds
     li
-      a(href='/' + feed.name + '.json' + query) #{feed.title}
+      a(href=baseUrl + '/' + feed.name + '.json' + query) #{feed.title}

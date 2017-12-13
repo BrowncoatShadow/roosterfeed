@@ -48,7 +48,7 @@ const feedMiddleware = async ctx => {
 
   var feed = {
     version: 'https://jsonfeed.org/version/1',
-    title: site.name,
+    title: site.title,
     items: []
   }
 
@@ -88,7 +88,7 @@ const queueMiddleware = async ctx => {
 }
 
 server([
-  get('/', ctx => render('index.pug', { feeds: FEEDS, token: ctx.query.token })),
+  get('/', ctx => render('index.pug', { baseUrl: URL, feeds: FEEDS, token: ctx.query.token })),
   get('/:feed.json', feedMiddleware),
   get('/queue', queueMiddleware)
 ])
