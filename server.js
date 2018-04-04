@@ -2,76 +2,67 @@ const server = require('server')
 const { get } = server.router
 const { render } = server.reply
 const axios = require('axios')
-const pug = require('pug')
+const episodeHtml = require('pug').compileFile('views/episode.pug')
 
 const URL = process.env.PROJECT_DOMAIN ? `https://${process.env.PROJECT_DOMAIN}.glitch.me` : 'http://localhost:3000'
+const SITE_URL = 'https://roosterteeth.com'
+const API_URL = 'https://svod-be.roosterteeth.com'
 
-const FEEDS = [
-  { id: 0, name: 'roosterteeth', title: 'Rooster Teeth' },
-  { id: 1, name: 'achievementhunter', title: 'Achievement Hunter' },
-  { id: 2, name: 'theknow', title: 'The Know' },
-  { id: 3, name: 'funhaus', title: 'Funhaus' },
-  { id: 5, name: 'screwattack', title: 'Screw Attack' },
-  { id: 6, name: 'cowchop', title: 'Cow Chop' },
-  { id: 8, name: 'gameattack', title: 'Game Attack' },
-  { id: 9, name: 'sugarpine7', title: 'Sugar Pine 7' }
-]
-
-const episodeHtml = pug.compileFile('views/episode.pug')
-
-function getRecentEpisodes (id) {
-  return axios({
-    method: 'get',
-    baseURL: 'http://roosterteeth.com/api/internal/episodes/recent',
-    params: {
-      channel: id,
-      limit: 24
-    }
+var CHANNELS
+axios.get(API_URL + '/api/v1/channels')
+  .then(response => {
+    CHANNELS = response.data.data
   })
-}
 
-function addToQueue (episode, token) {
+function addToQueue (uuid, token) {
   return axios({
     method: 'post',
-    baseURL: 'https://www.roosterteeth.com/api/v1/episodes',
-    url: episode + '/add-to-queue',
+    baseURL: 'https://lists.roosterteeth.com/api/v1/watchlist/add',
+    params: {
+      item_uuid: uuid,
+      item_type: 'episode'
+    },
     headers: {
-      'Authorization': token,
-      'User-Agent': 'Rooster Teeth/com.roosterteeth.roosterteeth (11; OS Version 9.3.2 (Build 13F69))'
+      'Authorization': 'Bearer ' + token,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
     }
   })
 }
 
 const feedMiddleware = async ctx => {
-  var site = FEEDS.find(f => f.name === ctx.params.feed)
+  var site = CHANNELS.find(f => f.attributes.slug === ctx.params.feed)
   if (typeof site === 'undefined') return 404
 
   var feed = {
     version: 'https://jsonfeed.org/version/1',
-    title: site.title,
+    title: site.attributes.name,
+    home_page_url: SITE_URL + '/channel/' + site.attributes.slug,
+    feed_url: URL + '/' + site.attributes.slug + '.json',
     items: []
   }
 
-  await getRecentEpisodes(site.id).then(response => {
-    feed['home_page_url'] = 'https://' + response.data.data[0].attributes.channelUrl
-
+  await axios({
+    method: 'get',
+    baseURL: API_URL + site.links.episodes,
+    params: {
+      per_page: 30
+    }
+  })
+  .then(response => {
     response.data.data.forEach(e => {
-      var url = 'https://' + e.attributes.channelUrl + '/episode/' + e.attributes.slug
-      var image = 'http:' + e.attributes.image
-
       feed.items.push({
         id: e.id,
-        url: url,
-        'date_published': e.attributes.releaseDate,
+        url: SITE_URL + e.canonical_links.self,
+        'date_published': e.attributes.sponsor_golive_at,
         title: e.attributes.title,
-        image: image,
+        image: e.included.images[0].attributes.large,
         summary: e.attributes.caption,
         'content_text': e.attributes.description,
         'content_html': episodeHtml({
-          url: url,
-          image: image,
+          url: SITE_URL + e.canonical_links.self,
+          image: e.included.images[0].attributes.large,
           description: e.attributes.description,
-          queueUrl: ctx.query.token ? `${URL}/queue?episode=${e.id}&token=${ctx.query.token}` : null
+          queueUrl: ctx.query.token ? `${URL}/queue?uuid=${e.uuid}&token=${ctx.query.token}` : null
         })
       })
     })
@@ -81,14 +72,14 @@ const feedMiddleware = async ctx => {
 }
 
 const queueMiddleware = async ctx => {
-  if (!(ctx.query.episode && ctx.query.token)) return 400
-  return addToQueue(ctx.query.episode, ctx.query.token)
+  if (!(ctx.query.uuid && ctx.query.token)) return 400
+  return addToQueue(ctx.query.uuid, ctx.query.token)
     .then(response => response.data.success ? 'Episode added to queue.' : response.data)
     .catch(error => error.response ? error.response.data.error : error.message)
 }
 
 server([
-  get('/', ctx => render('index.pug', { baseUrl: URL, feeds: FEEDS, token: ctx.query.token })),
+  get('/', ctx => render('index.pug', { baseUrl: URL, feeds: CHANNELS, token: ctx.query.token })),
   get('/:feed.json', feedMiddleware),
   get('/queue', queueMiddleware)
 ])

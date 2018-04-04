@@ -3,12 +3,12 @@ title Rooster Feed
 each feed in feeds
   link(
     rel='alternate'
-    title=feed.title
+    title=feed.attributes.name
     type='application/json'
-    href=baseUrl + '/' + feed.name + '.json' + query
+    href=baseUrl + '/' + feed.attributes.slug + '.json' + query
   )
 h1 Rooster Teeth JSON Feeds
 ul
   each feed in feeds
     li
-      a(href=baseUrl + '/' + feed.name + '.json' + query) #{feed.title}
+      a(href=baseUrl + '/' + feed.attributes.slug + '.json' + query) #{feed.attributes.name}
