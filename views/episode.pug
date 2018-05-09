@@ -1,0 +1,6 @@
+a(target='_blank' href=RT_HOST + episode.canonical_links.self)
+  img(src=episode.included.images[0].attributes.large alt='Go to episode')
+h2=episode.attributes.show_title
+h3=episode.attributes.display_title
+p=episode.attributes.description
+a(href=FEED_HOST + '/watchlist?add=' + episode.uuid) Add to Watchlist

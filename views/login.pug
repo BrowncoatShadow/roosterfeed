@@ -1,0 +1,11 @@
+extends layout
+
+block append body
+  h2 Log In
+  form(action='/login' method='post')
+    label(for='username') Username or E-mail Address
+    input#username(type='text' name='username' autocomplete='username email' required autofocus)
+    label(for='password') Password
+    input#password(type='password' name='password' autocomplete='current-password' required)
+    input(type='hidden' name='watchlist' value=watchlist)
+    button(type='submit') Log In

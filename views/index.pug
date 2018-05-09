@@ -1,0 +1,21 @@
+extends layout
+
+block append head
+  each feed in feeds
+    link(
+      rel='alternate'
+      title=feed.attributes.name
+      type='application/atom+xml'
+      href='/' + feed.attributes.slug + '/atom.xml' + query
+    )
+
+block append body
+  h2 Atom Feeds
+  ul
+    each feed in feeds
+      li
+        a(href='/' + feed.attributes.slug + '/atom.xml') #{feed.attributes.name}
+  if loggedIn
+    a(href='/logout'): button Log Out
+  else
+    a(href='/login'): button Log In
